@@ -1,0 +1,20 @@
+---
+# Database Configuration
+mysql_host: "prod-epicbook-mysql-9e703522.mysql.database.azure.com" 
+mysql_username: "epicbookadmin"
+mysql_password: "Epicbook2025!"
+mysql_database: "bookstore"
+
+# Application Configuration
+epicbook_repo_url: "https://github.com/pravinmishraaws/theepicbook.git"
+epicbook_branch: "main"
+
+# Node.js Configuration
+node_version: "18"
+app_port: 3000
+#app_port: 8080
+
+# System Configuration
+app_user: "epicbook"
+app_group: "epicbook"
+app_directory: "/opt/epicbook"

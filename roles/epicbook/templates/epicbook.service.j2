@@ -1,0 +1,26 @@
+[Unit]
+Description=EpicBook Node.js Application
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ app_directory }}
+ExecStart=/usr/bin/node {{ app_directory }}/server.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=epicbook
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+Environment=NODE_ENV=production
+Environment=PATH=/usr/bin:/usr/local/bin
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,48 @@
+trigger:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Deploy_App
+    displayName: "Configure and Deploy EpicBook (Prod)"
+    jobs:
+      - job: AnsibleDeploy
+        displayName: "Run Ansible to Configure VM"
+        steps:
+          - download: current
+            artifact: terraform_outputs
+            displayName: "Download Terraform Outputs"
+
+          - task: DownloadSecureFile@1
+            name: sshkey
+            inputs:
+              secureFile: 'id_rsa'   # Private key uploaded to Secure Files in DevOps
+
+          - script: |
+              sudo apt-get update -y
+              sudo apt-get install -y ansible jq
+              mkdir -p ~/.ssh
+              cp $(sshkey.secureFilePath) ~/.ssh/id_rsa
+              chmod 600 ~/.ssh/id_rsa
+
+              echo "Extracting values from Terraform output..."
+              VM_IP=$(jq -r '.vm_public_ip.value' terraform_outputs/tf_output.json)
+              MYSQL_FQDN=$(jq -r '.mysql_fqdn.value' terraform_outputs/tf_output.json)
+              MYSQL_USER=$(jq -r '.mysql_username.value' terraform_outputs/tf_output.json)
+              MYSQL_PASS=$(jq -r '.mysql_password.value' terraform_outputs/tf_output.json)
+
+              echo "VM IP: $VM_IP"
+              echo "Updating inventory.ini and vars..."
+
+              sed -i "s|<VM_PUBLIC_IP>|$VM_IP|g" ansible/inventory.ini
+              sed -i "s|<MYSQL_FQDN>|$MYSQL_FQDN|g" ansible/group_vars/all.yml
+              sed -i "s|<MYSQL_USER>|$MYSQL_USER|g" ansible/group_vars/all.yml
+              sed -i "s|<MYSQL_PASS>|$MYSQL_PASS|g" ansible/group_vars/all.yml
+            displayName: "Inject Terraform Outputs into Ansible Config"
+
+          - script: |
+              echo "Running Ansible Playbook..."
+              ansible-playbook ansible/playbook.yml
+            displayName: "Run Ansible Playbook"

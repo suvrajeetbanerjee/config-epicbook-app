@@ -1,0 +1,9 @@
+---
+- name: Deploy EpicBook Application
+  hosts: epicbook_servers
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+
+  roles:
+    - epicbook
